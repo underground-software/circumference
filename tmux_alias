@@ -1,0 +1,1 @@
+alias create_prod_tmux_ses='cd ~/singularity; SINGULARITY_HOSTNAME="fall2024-uml.kdlp.underground.software" SINGULARITY_VERSION="$(git describe HEAD)" SINGULARITY_DEPLOYMENT_STATUS="" tmux'
