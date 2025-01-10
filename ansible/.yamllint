@@ -1,0 +1,35 @@
+---
+extends: default
+
+ignore: |
+  .git
+  __pycache__
+  .venv
+  # cannot lint encrypted files
+  *.vault.yml
+  # cannot handle jinja2 syntax
+  roles/*/templates/*.yml
+  data/tenants/osci/shared_services_params/ansible/osci_zone/services.yml
+  collections/ansible_collections/kubernetes/core
+  collections/ansible_collections/containers/podman
+
+rules:
+  braces:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+    level: error
+  brackets:
+    min-spaces-inside: 0
+    max-spaces-inside: 1
+    level: error
+  line-length: disable
+  empty-lines: disable
+  truthy: disable
+  comments:
+    require-starting-space: false
+    min-spaces-from-content: 1
+  comments-indentation: false
+  octal-values:
+    forbid-implicit-octal: true
+    forbid-explicit-octal: true
+
