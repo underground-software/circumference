@@ -11,8 +11,9 @@ RUN dnf update && \
 
 RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf
 
-RUN git clone https://github.com/underground-software/singularity && \
-	mkdir singularity/{repos,docs}
+COPY --from=singularity_git_repo . ./singularity
+
+RUN mkdir -p singularity/{repos,docs}
 
 COPY start.sh .
 
