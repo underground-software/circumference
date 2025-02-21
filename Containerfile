@@ -1,4 +1,4 @@
-FROM fedora:40
+FROM fedora:latest
 
 RUN dnf update -y && \
 	dnf install -y \
@@ -7,9 +7,8 @@ RUN dnf update -y && \
 	jq \
 	ShellCheck \
 	which \
-	python-flake8 \
-	python-pytest \
-	python-requests-unixsocket \
+	python-virtualenv \
+	python-pip \
 	git
 
 RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf
