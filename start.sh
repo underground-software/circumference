@@ -8,5 +8,5 @@ podman-compose build
 podman-compose up -d
 # wait until synapse is done initializing
 podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
-./test.sh
+pytest
 podman-compose down

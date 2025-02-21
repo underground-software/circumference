@@ -1,12 +1,15 @@
 FROM fedora:latest
 
-RUN dnf update && \
+RUN dnf update -y && \
 	dnf install -y \
 	podman \
 	podman-compose \
 	jq \
 	ShellCheck \
-	python3-flake8 \
+	which \
+	python-flake8 \
+	python-pytest \
+	python-requests-unixsocket \
 	git
 
 RUN sed -i 's/log_driver = "journald"/log_driver = "json-file"/' /usr/share/containers/containers.conf
