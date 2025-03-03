@@ -7,6 +7,7 @@ RUN dnf update -y && \
 	jq \
 	ShellCheck \
 	which \
+	python-flake8 \
 	python-virtualenv \
 	python-pip \
 	git
