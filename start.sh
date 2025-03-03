@@ -8,7 +8,12 @@ podman-compose build
 podman-compose up -d
 # wait until synapse is done initializing
 podman-compose logs -f submatrix 2>&1 | sed '/Synapse now listening on TCP port 8008/ q'
-virtualenv .
-pip install -r requirements.txt
-pytest
+if [ -f test.sh ]
+then
+	./test.sh
+else
+	virtualenv .
+	pip install -r requirements.txt
+	pytest
+fi
 podman-compose down
