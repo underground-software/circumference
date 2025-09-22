@@ -1,0 +1,29 @@
+---
+
+- name: "Setup machines in the Community Cage"
+  hosts: community_cage
+  tasks:
+    - name: "Create users"
+      ansible.builtin.user:
+        name: "{{ item.uid }}"
+        groups: "{{ item.groups | default(omit) }}"
+      loop: "{{ cc_users }}"
+      loop_control:
+        label: "{{ item.uid }}"
+      when: item.uid != "root"
+
+    - name: "Add SSH keys to users"
+      ansible.posix.authorized_key:
+        user: "{{ item.0.uid }}"
+        key: "{{ item.1 }}"
+      loop: "{{ cc_users | subelements('ssh_keys') }}"
+      loop_control:
+        label: "{{ item.0.uid }}"
+
+    - name: "Password-less sudo for wheel group members"
+      lineinfile:
+        path: /etc/sudoers
+        regex: "^%wheel"
+        line: "%wheel ALL=(ALL) NOPASSWD: ALL"
+        validate: /usr/sbin/visudo -cf %s
+
