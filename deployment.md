@@ -4,46 +4,40 @@
 
 1. install a text editor, git, and tmux
 
+1. create singularity user: `useradd singularity`
+
 dnf install -y vim git
 
 1. Allow http & https traffic through the firewall
 
-[root@dev-01 ~]# firewall-cmd --add-service=http --permanent
-success
-[root@dev-01 ~]# firewall-cmd --add-service=https --permanent
-success
-
-[root@dev-01 ~]# firewall-cmd --add-service=http
-success
-[root@dev-01 ~]# firewall-cmd --add-service=https
-success
-
-[root@dev-01 ssl]# firewall-cmd --add-service=pop3s
-success
-[root@dev-01 ssl]# firewall-cmd --add-service=pop3s --permanent
-success
-
-[root@dev-01 ssl]# firewall-cmd --add-service=smtps
-success
-[root@dev-01 ssl]# firewall-cmd --add-service=smtps --permanent
-success
-
-[root@dev-01 ssl]# firewall-cmd --list-services
-dhcpv6-client http https mdns pop3s smtp smtps ssh
+```
+firewall-cmd --add-service=http --permanent
+firewall-cmd --add-service=http
+firewall-cmd --add-service=https --permanent
+firewall-cmd --add-service=https
+firewall-cmd --add-service=pop3s
+firewall-cmd --add-service=pop3s --permanent
+firewall-cmd --add-service=smtps
+firewall-cmd --add-service=smtps --permanent
+firewall-cmd --list-services
+> dhcpv6-client http https mdns pop3s smtp smtps ssh
+```
 
 1. SELinux needs to chill
 
-setenforce 0
-
-sudo dnf install policycoreutils-devel -y
+```
+dnf install policycoreutils-devel -y
 
 semanage port -a -t http_port_t -p tcp 995
 semanage port -a -t http_port_t -p tcp 465
+```
 
 Use this to create loadable module:
 
-[root@dev-01 ~]# cat singularity_policy.te
+```
+# cat <<EOF > singularity_policy.te
 module singularity_policy 1.0;
+
 
 require {
     type httpd_t;
@@ -56,36 +50,42 @@ require {
 #============= httpd_t ==============
 allow httpd_t container_file_t:sock_file write;
 allow httpd_t container_t:unix_stream_socket connectto;
+EOF
 
-[root@dev-01 singularity]# checkmodule -M -m -o singularity_policy.mod singularity_policy.te
-[root@dev-01 singularity]# semodule_package -o singularity_policy.pp -m singularity_policy.mod
-[root@dev-01 singularity]# semodule -i singularity_policy.pp
+checkmodule -M -m -o singularity_policy.mod singularity_policy.te
+semodule_package -o singularity_policy.pp -m singularity_policy.mod
+semodule -i singularity_policy.pp
+```
 
 (if nginx was installed here we would need to restart it)
 
 1. obtain cert and generate dhparams
 
+```
 dnf install -y certbot openssl
-
 certbot certonly -d <FQDN>
-
 openssl dhparam -out /etc/letsencrypt/ssl-dhparams.pem 4096
+```
 
 1. package certs for singularity
 
-[root@dev-01 ~]# cp /etc/letsencrypt/archive/dev.underground.software/fullchain1.pem fullchain.pem
-[root@dev-01 ~]# cp /etc/letsencrypt/archive/dev.underground.software/privkey1.pem privkey.pem
-[root@dev-01 ~]# dnf install -y tar
-[root@dev-01 ~]# tar cf cert.tar.gz fullchain.pem privkey.pem
-[root@dev-01 ~]# chown singularity:singularity cert.tar.gz
-[root@dev-01 ~]# mv cert.tar.gz /home/singularity/
+```
+
+cp /etc/letsencrypt/archive/<FQDN>/fullchain1.pem fullchain.pem
+cp /etc/letsencrypt/archive/<FQDN>/privkey1.pem privkey.pem
+dnf install -y tar
+tar cf cert.tar.gz fullchain.pem privkey.pem
+chown singularity:singularity cert.tar.gz
+mv cert.tar.gz /home/singularity/
+```
 
 
 1. configure nginx
 
 dnf install -y nginx nginx-mod-stream
 
-[root@dev-01 ssl]# cat /etc/nginx/nginx.conf
+```
+# cat <<EOF> /etc/nginx/nginx.conf
 # For more information on configuration, see:
 #   * Official English Documentation: http://nginx.org/en/docs/
 #   * Official Russian Documentation: http://nginx.org/ru/docs/
@@ -118,8 +118,8 @@ http
 	ssl_session_tickets off;
 
         ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
-	ssl_certificate /etc/letsencrypt/live/dev.underground.software/fullchain.pem;
-	ssl_certificate_key /etc/letsencrypt/live/dev.underground.software/privkey.pem;
+	ssl_certificate /etc/letsencrypt/live/<FQDN>/fullchain.pem;
+	ssl_certificate_key /etc/letsencrypt/live/<FQDN>/privkey.pem;
 
 
 	log_format main
@@ -158,7 +158,7 @@ stream
 
 	map $ssl_preread_server_name $name
 	{
-		dev.underground.software default;
+		<FQDN> default;
 	}
 	server
 	{
@@ -181,14 +181,20 @@ stream
 }
 
 
-[root@dev-01 ~]# systemctl enable --now nginx
+systemctl enable --now nginx
+```
 
-1. install podman and podman-compose
+1. install `podman` and `podman-compose`
 
+```
 dnf install -y podman-compose
+(may need epel-release for podman-compose
+```
 
 1. Change permissions so nginx can access singularity socks drawer
 
+```
 chmod o+x /home/singularity/
+```
 
 1. drop privileges and deploy singularity from the existing README
