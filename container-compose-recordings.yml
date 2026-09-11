@@ -1,0 +1,9 @@
+services:
+  nginx:
+    volumes:
+      - type: bind
+        source: /var/recordings
+        target: /var/www/html/recordings
+        read_only: true
+        bind:
+          selinux: z
