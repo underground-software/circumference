@@ -79,6 +79,10 @@ chown singularity:singularity cert.tar.gz
 mv cert.tar.gz /home/singularity/
 ```
 
+Alternatively:
+
+sudo tar -C /etc/letsencrypt/live/<FQDN>/ --create --numeric-owner --dereference fullchain.pem privkey.pem > /tmp/cert.tar
+sudo chown singularity:singularity /tmp/cert.tar
 
 1. configure nginx
 
@@ -198,3 +202,7 @@ chmod o+x /home/singularity/
 ```
 
 1. drop privileges and deploy singularity from the existing README
+
+Set up `root` matrix user with admin perms to be able to create rooms. This command will prompt for a password.
+
+podman-compose exec submatrix register_new_matrix_user -c /etc/synapse/homeserver.yaml -a -u root
